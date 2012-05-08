@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-from __future__ import print_function
-
 import datetime as dt
 import os
 import sys
@@ -16,7 +14,7 @@ except ImportError:
     try:
         import PyMySQL as MySQLdb
     except ImportError:
-        print("Please install MySQL-python or PyMySQL.", file=sys.stderr)
+        print >>sys.stderr, "Please install MySQL-python or PyMySQL."
         sys.exit(1)
 
 
