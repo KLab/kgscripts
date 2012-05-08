@@ -51,12 +51,8 @@ def delete_old_log(con, tablename, days, blocksize=1000):
     autoincrement されていて、 `created_at` というカラム名で
     作成日時が記録されている必要がある.
 
-    *blocksize* は一括で削除する行数.
-
-    .. note:
-       制限として、 *blocksize* の間に消す日と消さない日の
-       区切りがあると、そのブロックにある古いレコードを消さない
-       まま終了している. (テーブルサイズ肥大化抑止が目的のため)
+    *blocksize* は一括で削除する行数の初期値. 内部で自動的に
+    削除にかかった時間をもとに増やしたり減らしたりします.
     """
     date = dt.date.today() - dt.timedelta(days=days)
     logging.info("delete records befor %s", date)
@@ -64,9 +60,10 @@ def delete_old_log(con, tablename, days, blocksize=1000):
     cur = con.cursor()
     cur.execute("SELECT min(id),max(id) from %s" % (tablename,))
     MIN, MAX = map(int, cur.fetchone())
+    breaking = False
 
     s = MIN
-    while s < MAX:
+    while s < MAX and blocksize > 0:
         cur = con.cursor()
         e = min(MAX, s + blocksize - 1)
         cur.execute("SELECT created_at from %s WHERE id=%s" % (tablename, e))
@@ -74,7 +71,9 @@ def delete_old_log(con, tablename, days, blocksize=1000):
         if d is None:
             raise ValueError("created_at is NULL: pk=%r" % (e,))
         if d.date() >= date:
-            break
+            blocksize //= 2
+            breaking = True
+            continue
 
         logging.info("deleting %s-%s (%s)", s, e, d)
         q = "DELETE LOW_PRIORITY FROM %s WHERE `id`<=%d" % (tablename, e)
@@ -82,7 +81,7 @@ def delete_old_log(con, tablename, days, blocksize=1000):
         t = time.time()
         cur.execute(q)
         t = time.time() - t
-        if t < 0.01:
+        if t < 0.01 and not breaking:
             blocksize = int(blocksize * 1.1) +1
             logging.info("increase blocksize to %d", blocksize)
         if t > 0.1:
