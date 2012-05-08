@@ -2,3 +2,4 @@
 python virtualenv.py $HOME/python
 source $HOME/python/bin/activate
 pip install PyMySQL ipython paver
+python setup.py install
