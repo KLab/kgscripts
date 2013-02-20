@@ -12,7 +12,7 @@ try:
     import MySQLdb
 except ImportError:
     try:
-        import PyMySQL as MySQLdb
+        import pymysql as MySQLdb
     except ImportError:
         print >>sys.stderr, "Please install MySQL-python or PyMySQL."
         sys.exit(1)
