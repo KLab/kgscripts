@@ -143,7 +143,6 @@ def main():
     parser.add_option('-v', '--verbose', action='store_const', const=1, default=0)
 
     opts, args = parser.parse_args()
-    outfile = None
 
     if opts.help:
         parser.print_help()
